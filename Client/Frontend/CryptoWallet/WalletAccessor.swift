@@ -15,10 +15,10 @@ import web3swift
 struct WalletAccessor {
     let keystore: EthereumKeystoreV3?
     let password: String
-    let web3: web3
-    let polygonWeb3: web3
+    let web3: web3?
+    let polygonWeb3: web3?
 
-    func web3(on chain: EthNode) -> web3 {
+    func web3(on chain: EthNode) -> web3? {
         switch chain {
         case .Polygon:
             return polygonWeb3
@@ -28,16 +28,16 @@ struct WalletAccessor {
     }
 
     init() {
-        self.web3 = try! Web3.new(CryptoConfig.shared.nodeURL)
-        self.polygonWeb3 = try! Web3.new(EthNode.Polygon.url)
+        self.web3 = try? Web3.new(CryptoConfig.shared.nodeURL)
+        self.polygonWeb3 = try? Web3.new(EthNode.Polygon.url)
         self.password = CryptoConfig.shared.password
         let key = Defaults[.cryptoPrivateKey]
         let formattedKey = key.trimmingCharacters(in: .whitespacesAndNewlines)
         let dataKey = Data.fromHex(formattedKey)!
         self.keystore = try? EthereumKeystoreV3(privateKey: dataKey, password: password)
         if let keystore = keystore {
-            self.web3.addKeystoreManager(KeystoreManager([keystore]))
-            self.polygonWeb3.addKeystoreManager(KeystoreManager([keystore]))
+            self.web3?.addKeystoreManager(KeystoreManager([keystore]))
+            self.polygonWeb3?.addKeystoreManager(KeystoreManager([keystore]))
         }
     }
 
@@ -61,9 +61,9 @@ struct WalletAccessor {
 
     func sign(on chain: EthNode, message: String, using publicAddress: String) throws -> String {
         return try "0x"
-            + web3(on: chain).wallet.signPersonalMessage(
+            + (web3(on: chain)?.wallet.signPersonalMessage(
                 message, account: EthereumAddress(publicAddress)!, password: password
-            ).toHexString()
+            ).toHexString() ?? "")
     }
 
     func ethBalance(completion: @escaping (String?) -> Void) {
@@ -76,7 +76,7 @@ struct WalletAccessor {
         }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            web3(on: chain).eth.getBalancePromise(address: publicAddress).done(
+            web3(on: chain)?.eth.getBalancePromise(address: publicAddress).done(
                 on: DispatchQueue.main
             ) {
                 balance in
@@ -94,19 +94,19 @@ struct WalletAccessor {
 
         DispatchQueue.global(qos: .userInitiated).async {
             let erc20ContractAddress = EthereumAddress(token.contractAddress)!
-            let contract = web3(on: token.network).contract(
+            let contract = web3(on: token.network)?.contract(
                 Web3.Utils.erc20ABI, at: erc20ContractAddress, abiVersion: 2)!
             var options = TransactionOptions.defaultOptions
             options.from = walletAddress
             options.gasPrice = .automatic
             options.gasLimit = .automatic
             let method = "balanceOf"
-            let tx = contract.read(
+            let tx = contract?.read(
                 method,
                 parameters: [walletAddress] as [AnyObject],
                 extraData: Data(),
                 transactionOptions: options)!
-            tx.callPromise().done { tokenBalance in
+            tx?.callPromise().done { tokenBalance in
                 let balanceBigUInt = tokenBalance["0"] as! BigUInt
                 completion(
                     Web3.Utils.formatToEthereumUnits(
@@ -121,7 +121,7 @@ struct WalletAccessor {
 
     func gasPrice(on chain: EthNode, completion: @escaping (String?) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
-            web3(on: chain).eth.getGasPricePromise().done(on: DispatchQueue.main) { estimate in
+            web3(on: chain)?.eth.getGasPricePromise().done(on: DispatchQueue.main) { estimate in
                 completion(Web3.Utils.formatToEthereumUnits(estimate, toUnits: .Gwei))
             }.cauterize()
         }
@@ -132,7 +132,7 @@ struct WalletAccessor {
         eth value: String, from fromAddress: EthereumAddress, to toAddress: EthereumAddress,
         for gas: String?, using data: String?
     ) throws -> String {
-        let contract = web3(on: chain).contract(
+        let contract = web3(on: chain)?.contract(
             Web3.Utils.coldWalletABI, at: toAddress, abiVersion: 2)!
 
         var options = TransactionOptions.defaultOptions
@@ -140,13 +140,13 @@ struct WalletAccessor {
         options.from = fromAddress
         options.gasPrice = .automatic
         options.gasLimit = gas != nil ? .manual(Web3.Utils.hexToBigUInt(gas!)!) : .automatic
-        let tx = contract.write(
+        let tx = contract?.write(
             "fallback",
             parameters: [AnyObject](),
             extraData: data != nil ? Web3.Utils.hexToData(data!) ?? Data() : Data(),
             transactionOptions: options)!
 
-        return try tx.send(password: password).transaction.txhash ?? ""
+        return try tx?.send(password: password).transaction.txhash ?? ""
     }
 }
 
