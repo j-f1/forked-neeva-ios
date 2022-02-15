@@ -112,21 +112,28 @@ class TabCardModel: CardModel {
             if partialResult.isEmpty || partialResult.last?.cells.count == maxCols
                 || tabGroup != nil
             {
-                if let tabGroup = tabGroup, tabGroup.isExpanded {
-                    for index in stride(from: 0, to: tabGroup.allDetails.count, by: maxCols) {
-                        var max = index + maxCols
-                        if max > tabGroup.allDetails.count {
-                            max = tabGroup.allDetails.count
+                if let tabGroup = tabGroup {
+                    if tabGroup.isExpanded {
+                        for index in stride(from: 0, to: tabGroup.allDetails.count, by: maxCols) {
+                            var max = index + maxCols
+                            if max > tabGroup.allDetails.count {
+                                max = tabGroup.allDetails.count
+                            }
+                            let range = index..<max
+                            partialResult.append(
+                                Row(cells: [Row.Cell.tabGroupGridRow(tabGroup, range)]))
                         }
-                        let range = index..<max
-                        partialResult.append(
-                            Row(cells: [Row.Cell.tabGroupGridRow(tabGroup, range)]))
+                    } else {
+                        if (tabGroup.allDetails.count + (partialResult.last?.cells.count ?? 0)) <= maxCols {
+                            partialResult[partialResult.endIndex - 1].cells.append(.tabGroupInline(tabGroup))
+                        } else {
+                            partialResult.append(Row(cells: [Row.Cell.tabGroupInline(tabGroup)]))
+                        }
                     }
                 } else {
-                    partialResult.append(
-                        Row(cells: [tabGroup.map(Row.Cell.tabGroupInline) ?? .tab(details)]))
+                    partialResult.append(Row(cells: [.tab(details)]))
                 }
-                if tabGroup != nil {
+                if tabGroup != nil && partialResult.last?.cells.count == maxCols {
                     partialResult.append(Row(cells: []))
                 }
             } else {
@@ -140,7 +147,7 @@ class TabCardModel: CardModel {
         allDetails = manager.getAll()
             .map { TabCardDetails(tab: $0, manager: manager) }
 
-        modifyAllDetailsAvoidingSingleTabs(groupManager.childTabs)
+        //modifyAllDetailsAvoidingSingleTabs(groupManager.childTabs)
 
         allDetailsWithExclusionList = manager.getAll().filter {
             !groupManager.childTabs.contains($0)
