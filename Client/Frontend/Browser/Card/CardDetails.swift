@@ -132,6 +132,7 @@ public class TabCardDetails: CardDetails, AccessingManagerProvider,
 
     public let id: String
     private var isPinnedSubscription: AnyCancellable?
+    private var selectedTabWillChangeSubscription: AnyCancellable?
 
     var manager: TabManager
     var isChild: Bool
@@ -178,6 +179,15 @@ public class TabCardDetails: CardDetails, AccessingManagerProvider,
 
         isPinnedSubscription = tab.$isPinned.sink { [weak self] _ in
             self?.objectWillChange.send()
+        }
+
+        selectedTabWillChangeSubscription = manager.selectedTabWillChangePublisher
+            .sink { receivedValue in
+                if receivedValue.1?.id == self.id && receivedValue.0?.id != self.id {
+                    self.objectWillChange.send()
+                } else if receivedValue.1?.id != self.id && receivedValue.0?.id == self.id {
+                    self.objectWillChange.send()
+                }
         }
     }
 

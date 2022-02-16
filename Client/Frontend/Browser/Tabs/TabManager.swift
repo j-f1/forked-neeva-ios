@@ -79,6 +79,7 @@ class TabManager: NSObject {
     // Use `selectedTabPublisher` to observe changes to `selectedTab`.
     var selectedTab: Tab?
     var selectedTabPublisher = PassthroughSubject<Tab?, Never>()
+    var selectedTabWillChangePublisher = PassthroughSubject<(Tab?, Tab?), Never>()
 
     fileprivate let navDelegate: TabManagerNavDelegate
 
@@ -251,6 +252,7 @@ class TabManager: NSObject {
 
         if let tab = selectedTab {
             selectedTabPublisher.send(tab)
+            selectedTabWillChangePublisher.send((previous, tab))
         }
 
         if let tab = previous {
