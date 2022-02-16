@@ -232,7 +232,12 @@ class TabManager: NSObject {
         if Defaults[.closePrivateTabs], !(tab?.isIncognito ?? false), incognitoTabs.count > 0 {
             removeAllIncognitoTabs()
         }
-
+        
+//        if let tab = selectedTab {
+            print(">>> selectedTabPublisher.send(tab)")
+            selectedTabPublisher.send(tab)
+//        }
+        print(">>> selectedTab about to be changed")
         selectedTab = tab
 
         incognitoModel.update(isIncognito: tab?.isIncognito ?? false)
@@ -248,11 +253,6 @@ class TabManager: NSObject {
                 self, didSelectedTabChange: tab, previous: previous,
                 isRestoring: store.isRestoringTabs,
                 updateZeroQuery: updateZeroQuery)
-        }
-
-        if let tab = selectedTab {
-            selectedTabPublisher.send(tab)
-            selectedTabWillChangePublisher.send((previous, tab))
         }
 
         if let tab = previous {

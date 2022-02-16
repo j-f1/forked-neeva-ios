@@ -181,11 +181,12 @@ public class TabCardDetails: CardDetails, AccessingManagerProvider,
             self?.objectWillChange.send()
         }
 
-        selectedTabWillChangeSubscription = manager.selectedTabWillChangePublisher
-            .sink { receivedValue in
-                if receivedValue.1?.id == self.id && receivedValue.0?.id != self.id {
+        selectedTabWillChangeSubscription = manager.selectedTabPublisher
+            .sink { tab in
+                print(">>> hello from sink")
+                if tab?.id == self.id && manager.selectedTab?.tabUUID != self.id {
                     self.objectWillChange.send()
-                } else if receivedValue.1?.id != self.id && receivedValue.0?.id == self.id {
+                } else if manager.selectedTab?.tabUUID != self.id && tab?.id == self.id {
                     self.objectWillChange.send()
                 }
         }
