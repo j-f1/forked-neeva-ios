@@ -147,6 +147,8 @@ public class SpaceStore: ObservableObject {
     public static var suggested = SpaceStore(
         suggestedID: "c3Z5QSdvOcybtFTY5uboDyvhm4W8mywvEyvCcdtU")
 
+    public static let searchableIndex = CSSearchableIndex(name: "co.neeva.app.ios.browser.spaces")
+
     public static var promotionalSpaceId =
         "-ysvXOiH2HWXsXeN_QaVFzwWEF_ASvtOW_yylJEM"
     public static let dailyDigestID = "spaceDailyDigest"
@@ -392,21 +394,22 @@ public class SpaceStore: ObservableObject {
         }
 
         // add spaces to CS
-        for space in allSpaces {
-            let attributes = CSSearchableItemAttributeSet(contentType: Space.CSItemContentType)
-            attributes.title = space.name
-            attributes.contentDescription = space.description
-            let item = CSSearchableItem(
-                uniqueIdentifier: space.id.id,
-                domainIdentifier: Space.CSItemDomainIdentifier,
-                attributeSet: attributes
-            )
-            item.expirationDate = .distantFuture
-            // make this pretty
-            CSSearchableIndex.default().indexSearchableItems([item]) { error in
-                if let error = error {
-                    Logger.storage.error("Error: \(error)")
-                }
+        Self.searchableIndex.indexSearchableItems(
+            allSpaces.map { space in
+                let attributes = CSSearchableItemAttributeSet(contentType: Space.CSItemContentType)
+                attributes.title = space.name
+                attributes.contentDescription = space.description
+                let item = CSSearchableItem(
+                    uniqueIdentifier: space.id.id,
+                    domainIdentifier: Space.CSItemDomainIdentifier,
+                    attributeSet: attributes
+                )
+                item.expirationDate = .distantFuture
+                return item
+            }
+        ) { error in
+            if let error = error {
+                Logger.storage.error("Error: \(error)")
             }
         }
 
