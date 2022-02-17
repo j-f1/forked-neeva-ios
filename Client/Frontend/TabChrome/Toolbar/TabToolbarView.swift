@@ -100,8 +100,10 @@ struct TabToolbarView: View {
 struct TabToolbarView_Previews: PreviewProvider {
     static var previews: some View {
         let make = { (model: TabChromeModel) in
-            TabToolbarView(performAction: { _ in }, buildTabsMenu: { _ in nil }, onNeevaButtonPressed: {})
-                .environmentObject(model)
+            TabToolbarView(
+                performAction: { _ in }, buildTabsMenu: { _ in nil }, onNeevaButtonPressed: {}
+            )
+            .environmentObject(model)
         }
         VStack {
             Spacer()

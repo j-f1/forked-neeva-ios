@@ -61,21 +61,23 @@ class TabCardModel: CardModel {
     struct Row: Identifiable {
         var id: Set<String> { Set(cells.map(\.id)) }
         var numTabsInRow: Int {
-            cells.reduce(0, {x, y in
-                x + y.numTabs
-            })
+            cells.reduce(
+                0,
+                { x, y in
+                    x + y.numTabs
+                })
         }
 
         enum Cell: Identifiable {
             case tab(TabCardDetails)
-            case tabGroupInline(TabGroupCardDetails)
+            case tabGroupInline(TabGroupCardDetails, Bool)
             case tabGroupGridRow(TabGroupCardDetails, Range<Int>)
 
             var id: String {
                 switch self {
                 case .tab(let details):
                     return details.id
-                case .tabGroupInline(let details):
+                case .tabGroupInline(let details, let nextToCells):
                     return details.id
                 case .tabGroupGridRow(let details, let range):
                     return details.allDetails[range].reduce("") { $0 + $1.id + ":" }
@@ -86,7 +88,7 @@ class TabCardModel: CardModel {
                 switch self {
                 case .tab(let details):
                     return details.isSelected
-                case .tabGroupInline(let details):
+                case .tabGroupInline(let details, let nextToCells):
                     return details.isSelected
                 case .tabGroupGridRow(let details, let range):
                     return details.allDetails[range].contains { $0.isSelected }
@@ -97,7 +99,7 @@ class TabCardModel: CardModel {
                 switch self {
                 case .tab(_):
                     return 1
-                case .tabGroupInline(let details):
+                case .tabGroupInline(let details, let nextToCells):
                     return details.allDetails.count
                 case .tabGroupGridRow(let details, _):
                     return details.allDetails.count
@@ -113,7 +115,9 @@ class TabCardModel: CardModel {
         // of this resolves a problem where TabGroupHeader doesn't hide arrows button
         // when the number of tabs drops below maxCols.
         tabGroupExpanded.forEach { groupID in
-            if let tabGroup = tabGroupModel.allDetails.first(where: { groupID == $0.id }), tabGroup.allDetails.count <= maxCols {
+            if let tabGroup = tabGroupModel.allDetails.first(where: { groupID == $0.id }),
+                tabGroup.allDetails.count <= maxCols
+            {
                 tabGroupExpanded.remove(groupID)
             }
         }
@@ -144,10 +148,14 @@ class TabCardModel: CardModel {
                     } else {
                         // If there's enough remaining columns, fit the tab group in the same row with individual tabs.
                         // Otherwise, build a horizontal scroll view in the next row.
-                        if (tabGroup.allDetails.count + (partialResult.last?.numTabsInRow ?? 0)) <= maxCols && !partialResult.isEmpty {
-                            partialResult[partialResult.endIndex - 1].cells.append(.tabGroupInline(tabGroup))
+                        if (tabGroup.allDetails.count + (partialResult.last?.numTabsInRow ?? 0))
+                            <= maxCols && !partialResult.isEmpty
+                        {
+                            partialResult[partialResult.endIndex - 1].cells.append(
+                                .tabGroupInline(tabGroup, true))
                         } else {
-                            partialResult.append(Row(cells: [Row.Cell.tabGroupInline(tabGroup)]))
+                            partialResult.append(
+                                Row(cells: [Row.Cell.tabGroupInline(tabGroup, false)]))
                         }
                     }
                 } else {

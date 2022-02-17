@@ -769,7 +769,8 @@ class BrowserViewController: UIViewController, ModalPresenter {
                     self.recordNavigationInTab(tab, navigation: nav, visitType: visitType)
                 }
             } else if let nav = tab.loadRequest(URLRequest(url: url)) {
-                tab.queryForNavigation.currentQuery = .init(typed: searchQueryModel.value, suggested: suggestedQuery)
+                tab.queryForNavigation.currentQuery = .init(
+                    typed: searchQueryModel.value, suggested: suggestedQuery)
                 recordNavigationInTab(tab, navigation: nav, visitType: visitType)
             }
         }

@@ -98,7 +98,7 @@ class TabChromeModel: ObservableObject {
     @Published var currentCheatsheetURL: URL? = nil
 
     @Published var currentCheatsheetFaviconURL: URL? = nil
-    
+
     private var inlineToolbarHeight: CGFloat {
         return UIConstants.TopToolbarHeightWithToolbarButtonsShowing
             + (showTopCardStrip ? CardControllerUX.Height : 0)
@@ -151,7 +151,7 @@ class TabChromeModel: ObservableObject {
         tryCheatsheetPopoverObserver?.cancel()
 
         guard let tabManager = topBarDelegate?.tabManager,
-              let tabContainerModel = topBarDelegate?.tabContainerModel
+            let tabContainerModel = topBarDelegate?.tabContainerModel
         else { return }
 
         publishedTabObserver = tabManager.selectedTabPublisher
@@ -168,16 +168,18 @@ class TabChromeModel: ObservableObject {
                     guard NeevaFeatureFlags[.cheatsheetQuery], let url = url else { return false }
                     // if recipe cheatsheet would've been shown, show popover
                     if !recipe.title.isEmpty,
-                       !Defaults[.seenTryCheatsheetPopoverOnRecipe],
-                       RecipeViewModel.isRecipeAllowed(url: url) {
+                        !Defaults[.seenTryCheatsheetPopoverOnRecipe],
+                        RecipeViewModel.isRecipeAllowed(url: url)
+                    {
                         return true
                     }
                     // else show popover if seen SRP intro screen
                     if showPopover.newValue,
-                       // cheatsheet is not used on NeevaDomain
-                       !NeevaConstants.isInNeevaDomain(url),
-                       // avoid flashing the popover when app launches
-                       !(url.scheme == InternalURL.scheme) {
+                        // cheatsheet is not used on NeevaDomain
+                        !NeevaConstants.isInNeevaDomain(url),
+                        // avoid flashing the popover when app launches
+                        !(url.scheme == InternalURL.scheme)
+                    {
                         return true
                     }
                     return false
@@ -195,7 +197,8 @@ class TabChromeModel: ObservableObject {
         guard NeevaFeatureFlags[.cheatsheetQuery] else { return }
         Defaults[.showTryCheatsheetPopover] = false
         if let recipeModel = topBarDelegate?.tabContainerModel.recipeModel,
-           !recipeModel.recipe.title.isEmpty {
+            !recipeModel.recipe.title.isEmpty
+        {
             Defaults[.seenTryCheatsheetPopoverOnRecipe] = true
         }
     }

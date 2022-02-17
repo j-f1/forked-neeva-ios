@@ -242,7 +242,8 @@ public struct CheatsheetMenuView: View {
                             // there are some false positives
                             ClientLogger.shared.logCounter(
                                 .CheatsheetEmpty,
-                                attributes: EnvironmentHelper.shared.getAttributes() + model.loggerAttributes
+                                attributes: EnvironmentHelper.shared.getAttributes()
+                                    + model.loggerAttributes
                             )
                         }
                     if cheatsheetDebugQuery {

@@ -6,7 +6,7 @@ import Defaults
 import Foundation
 
 public protocol ExperimentArms: Hashable, CaseIterable, RawRepresentable
-    where RawValue == String, AllCases: RandomAccessCollection {}
+where RawValue == String, AllCases: RandomAccessCollection {}
 
 public enum NeevaExperiment {
     private static let experimentValuesKey =

@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import Combine
+import Defaults
 import Foundation
 import Shared
-import Defaults
-import Combine
 
 public struct LogConfig {
     public enum Interaction: String {

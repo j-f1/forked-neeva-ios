@@ -29,16 +29,18 @@ struct SingleLevelTabCardsView: View {
             HStack(spacing: CardGridUX.GridSpacing) {
                 ForEach(row.cells) { details in
                     switch details {
-                    case .tabGroupInline(let groupDetails):
+                    case .tabGroupInline(let groupDetails, let nextToCells):
                         CollapsedCardGroupView(
-                            groupDetails: groupDetails, containerGeometry: containerGeometry
+                            groupDetails: groupDetails, containerGeometry: containerGeometry,
+                            nextToCells: nextToCells
                         )
                         .padding(.horizontal, -CardGridUX.GridSpacing)
                         .padding(.bottom, CardGridUX.GridSpacing)
+                        .zIndex(groupDetails.allDetails.contains(where: \.isSelected) ? 1 : 0)
                     case .tabGroupGridRow(let groupDetails, let range):
                         ExpandedCardGroupRowView(
                             groupDetails: groupDetails, containerGeometry: containerGeometry,
-                            range: range
+                            range: range, nextToCells: false
                         )
                         .padding(.horizontal, -CardGridUX.GridSpacing)
                         .padding(

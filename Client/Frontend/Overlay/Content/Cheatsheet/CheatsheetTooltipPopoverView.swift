@@ -11,7 +11,8 @@ struct CheatsheetTooltipPopoverView: View {
     @Environment(\.colorScheme) var colorScheme
 
     var isDarkMode: Bool { colorScheme == .dark }
-    static let backgroundColorMode: WithPopoverColorMode = .dyanmicBackground(.brand.blue, .brand.variant.polar)
+    static let backgroundColorMode: WithPopoverColorMode = .dyanmicBackground(
+        .brand.blue, .brand.variant.polar)
 
     @State var impressionTimer: Timer? = nil
 

@@ -115,8 +115,7 @@ struct WebResultList: View {
                                 .frame(width: 20, height: 20, alignment: .center)
                             Text(
                                 "Query string: "
-                                    +
-                                (currentCheatsheetQueryAsURL?.absoluteString ?? "nil")
+                                    + (currentCheatsheetQueryAsURL?.absoluteString ?? "nil")
                             )
                             .withFont(.bodySmall)
                             .multilineTextAlignment(.leading)

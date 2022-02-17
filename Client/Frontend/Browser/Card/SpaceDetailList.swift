@@ -144,7 +144,8 @@ struct SpaceDetailList: View {
                                                 url: url, title: title, description: description)
                                     },
                                     editSpaceItem: editSpaceItem,
-                                    index: primitive.allDetails.firstIndex { $0.id == details.id } ?? 0,
+                                    index: primitive.allDetails.firstIndex { $0.id == details.id }
+                                        ?? 0,
                                     canEdit: canEdit
                                 )
                                 .modifier(ListSeparatorModifier())
@@ -159,7 +160,9 @@ struct SpaceDetailList: View {
                                         .withFont(.headingMedium)
                                         .foregroundColor(.label)
 
-                                    if let snippet = details.data.snippet, !snippet.isEmptyOrWhitespace() {
+                                    if let snippet = details.data.snippet,
+                                        !snippet.isEmptyOrWhitespace()
+                                    {
                                         SpaceMarkdownSnippet(
                                             showDescriptions: showDescriptions, details: details,
                                             snippet: snippet)

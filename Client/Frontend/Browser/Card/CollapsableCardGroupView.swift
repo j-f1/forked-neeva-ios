@@ -8,6 +8,7 @@ import SwiftUI
 struct CollapsedCardGroupView: View {
     @ObservedObject var groupDetails: TabGroupCardDetails
     let containerGeometry: GeometryProxy
+    let nextToCells: Bool
 
     @Environment(\.aspectRatio) private var aspectRatio
     @Environment(\.cardSize) private var size
@@ -23,11 +24,11 @@ struct CollapsedCardGroupView: View {
             // Don't make it a scroll view if the tab group can't be expanded
             ExpandedCardGroupRowView(
                 groupDetails: groupDetails, containerGeometry: containerGeometry,
-                range: 0..<groupDetails.allDetails.count
+                range: 0..<groupDetails.allDetails.count, nextToCells: nextToCells
             )
         } else {
             VStack(spacing: 0) {
-                TabGroupHeader(groupDetails: groupDetails)
+                TabGroupHeader(groupDetails: groupDetails, nextToCells: false)
                 scrollView
             }
             .animation(nil)
@@ -87,6 +88,7 @@ struct ExpandedCardGroupRowView: View {
     @ObservedObject var groupDetails: TabGroupCardDetails
     let containerGeometry: GeometryProxy
     var range: Range<Int>
+    let nextToCells: Bool
 
     @Environment(\.aspectRatio) private var aspectRatio
     @Environment(\.cardSize) private var size
@@ -96,7 +98,7 @@ struct ExpandedCardGroupRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if isFirstRow(range) {
-                TabGroupHeader(groupDetails: groupDetails)
+                TabGroupHeader(groupDetails: groupDetails, nextToCells: nextToCells)
             } else {
                 HStack {
                     // Spacer to expand the width of the view
@@ -134,6 +136,7 @@ struct ExpandedCardGroupRowView: View {
                     isLastRow(range, groupDetails) ? 24 : 0,
                     corners: .bottom
                 )
+                .padding(.horizontal, nextToCells ? 6 : 0)
         )
     }
 
@@ -155,6 +158,7 @@ struct TabGroupHeader: View {
     @ObservedObject var groupDetails: TabGroupCardDetails
     @EnvironmentObject var tabGroupCardModel: TabGroupCardModel
     @Environment(\.columns) private var columns
+    let nextToCells: Bool
 
     @State private var renaming = false
     @State private var deleting = false

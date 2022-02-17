@@ -54,9 +54,10 @@ public class CheatsheetMenuViewModel: ObservableObject {
 
     var currentCheatsheetQueryAsURL: URL? {
         guard let query = currentCheatsheetQuery,
-           let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlUserAllowed),
-           !encodedQuery.isEmpty else {
-               return nil
+            let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlUserAllowed),
+            !encodedQuery.isEmpty
+        else {
+            return nil
         }
         return URL(string: "\(NeevaConstants.appSearchURL)?q=\(encodedQuery)")
     }
@@ -74,7 +75,7 @@ public class CheatsheetMenuViewModel: ObservableObject {
             ClientLogCounterAttribute(
                 key: LogConfig.CheatsheetAttribute.currentCheatsheetQuery,
                 value: currentCheatsheetQuery
-            )
+            ),
         ]
     }
 
