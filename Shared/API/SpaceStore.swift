@@ -4,6 +4,7 @@
 
 import Apollo
 import Combine
+import CoreSpotlight
 import Foundation
 
 public struct SpaceID: Hashable, Identifiable {
@@ -60,6 +61,9 @@ public struct SpaceGeneratorData {
 public class Space: Hashable, Identifiable {
     public typealias Acl = ListSpacesQuery.Data.ListSpace.Space.Space.Acl
     public typealias Notification = ListSpacesQuery.Data.ListSpace.Space.Space.Notification
+
+    public static let CSItemDomainIdentifier: String = "co.neeva.app.ios.browser.space"
+    public static let CSItemContentType: UTType = .urlBookmarkData
 
     public var id: SpaceID
     public var name: String
@@ -384,6 +388,24 @@ public class SpaceStore: ObservableObject {
                 }
 
                 allSpaces.append(newSpace)
+            }
+        }
+
+        // add spaces to CS
+        for space in allSpaces {
+            let attributes = CSSearchableItemAttributeSet(contentType: Space.CSItemContentType)
+            attributes.title = space.name
+            attributes.contentDescription = space.description
+            let item = CSSearchableItem(
+                uniqueIdentifier: space.id.id,
+                domainIdentifier: Space.CSItemDomainIdentifier,
+                attributeSet: attributes
+            )
+            // make this pretty
+            CSSearchableIndex.default().indexSearchableItems([item]) { error in
+                if let error = error {
+                    Logger.storage.error("Error: \(error)")
+                }
             }
         }
 
