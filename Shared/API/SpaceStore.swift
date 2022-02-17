@@ -401,6 +401,7 @@ public class SpaceStore: ObservableObject {
                 domainIdentifier: Space.CSItemDomainIdentifier,
                 attributeSet: attributes
             )
+            item.expirationDate = .distantFuture
             // make this pretty
             CSSearchableIndex.default().indexSearchableItems([item]) { error in
                 if let error = error {
