@@ -232,21 +232,18 @@ class TabManager: NSObject {
         if Defaults[.closePrivateTabs], !(tab?.isIncognito ?? false), incognitoTabs.count > 0 {
             removeAllIncognitoTabs()
         }
-        
-//        if let tab = selectedTab {
-            print(">>> selectedTabPublisher.send(tab)")
-            selectedTabPublisher.send(tab)
-//        }
-        print(">>> selectedTab about to be changed")
+
+        tab?.createWebview()
+        tab?.lastExecutedTime = Date.nowMilliseconds()
+
+        selectedTabPublisher.send(tab)
+
         selectedTab = tab
 
         incognitoModel.update(isIncognito: tab?.isIncognito ?? false)
         store.preserveTabs(tabs, selectedTab: selectedTab, for: scene)
 
         assert(tab === selectedTab, "Expected tab is selected")
-
-        selectedTab?.createWebview()
-        selectedTab?.lastExecutedTime = Date.nowMilliseconds()
 
         delegates.forEach {
             $0.get()?.tabManager(

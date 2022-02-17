@@ -183,13 +183,12 @@ public class TabCardDetails: CardDetails, AccessingManagerProvider,
 
         selectedTabWillChangeSubscription = manager.selectedTabPublisher
             .sink { tab in
-                print(">>> hello from sink")
                 if tab?.id == self.id && manager.selectedTab?.tabUUID != self.id {
                     self.objectWillChange.send()
                 } else if manager.selectedTab?.tabUUID != self.id && tab?.id == self.id {
                     self.objectWillChange.send()
                 }
-        }
+            }
     }
 
     public func performDrop(info: DropInfo) -> Bool {
