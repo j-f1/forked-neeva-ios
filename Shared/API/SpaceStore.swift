@@ -413,6 +413,16 @@ public class SpaceStore: ObservableObject {
             }
         }
 
+        // remove spaces that are gone
+        let removedSpaces = Set(oldSpaceMap.keys).subtracting(allSpaces.map { $0.id })
+        Self.searchableIndex.deleteSearchableItems(
+            withIdentifiers: removedSpaces.map { $0.id }
+        ) { error in
+            if let error = error {
+                Logger.storage.error("Error: \(error)")
+            }
+        }
+
         self.allSpaces = allSpaces
 
         if spacesToFetch.count > 0 {
