@@ -223,56 +223,6 @@ class TabCardModel: CardModel {
         return partialResult.filter {
             !$0.cells.isEmpty
         }
-        /*
-        return allDetails.filter { tabCard in
-            let tab = tabCard.manager.get(for: tabCard.id)!
-            return
-                (tabGroupModel.representativeTabs.contains(tab)
-                || allDetailsWithExclusionList.contains { $0.id == tabCard.id })
-                && tab.isIncognito == incognito
-        }.reduce(into: []) { partialResult, details in
-            let tabGroup = tabGroupModel.allDetails.first(where: { $0.id == details.rootID })
-            if partialResult.isEmpty || partialResult.last!.numTabsInRow >= maxCols
-                || tabGroup != nil
-            {
-                if let tabGroup = tabGroup {
-                    if tabGroup.isExpanded {
-                        // tabGroupGridRow always occupies a row by itself.
-                        for index in stride(from: 0, to: tabGroup.allDetails.count, by: maxCols) {
-                            var max = index + maxCols
-                            if max > tabGroup.allDetails.count {
-                                max = tabGroup.allDetails.count
-                            }
-                            let range = index..<max
-                            partialResult.append(
-                                Row(cells: [Row.Cell.tabGroupGridRow(tabGroup, range)]))
-                        }
-                    } else {
-                        // If there's enough remaining columns, fit the tab group in the same row with individual tabs.
-                        // Otherwise, build a horizontal scroll view in the next row.
-                        if (tabGroup.allDetails.count + (partialResult.last?.numTabsInRow ?? 0))
-                            <= maxCols && !partialResult.isEmpty
-                        {
-                            partialResult[partialResult.endIndex - 1].cells.append(
-                                .tabGroupInline(tabGroup, true))
-                        } else {
-                            //TODO: if there's enough remaning columns, look ahead and see if we can fit in other tab/tab gropu
-                            partialResult.append(
-                                Row(cells: [Row.Cell.tabGroupInline(tabGroup, false)]))
-                        }
-                    }
-                } else {
-                    partialResult.append(Row(cells: [.tab(details)]))
-                }
-                // Insert a new row (following expanded tab group) for individual tabs
-                if tabGroup != nil && tabGroup!.isExpanded {
-                    partialResult.append(Row(cells: []))
-                }
-            } else {
-                partialResult[partialResult.endIndex - 1].cells.append(.tab(details))
-            }
-        }.filter { !$0.cells.isEmpty }
-         */
     }
 
     func onDataUpdated() {
