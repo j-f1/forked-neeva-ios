@@ -70,14 +70,14 @@ class TabCardModel: CardModel {
 
         enum Cell: Identifiable {
             case tab(TabCardDetails)
-            case tabGroupInline(TabGroupCardDetails, Bool)
+            case tabGroupInline(TabGroupCardDetails)
             case tabGroupGridRow(TabGroupCardDetails, Range<Int>)
 
             var id: String {
                 switch self {
                 case .tab(let details):
                     return details.id
-                case .tabGroupInline(let details, let nextToCells):
+                case .tabGroupInline(let details):
                     return details.id
                 case .tabGroupGridRow(let details, let range):
                     return details.allDetails[range].reduce("") { $0 + $1.id + ":" }
@@ -88,7 +88,7 @@ class TabCardModel: CardModel {
                 switch self {
                 case .tab(let details):
                     return details.isSelected
-                case .tabGroupInline(let details, let nextToCells):
+                case .tabGroupInline(let details):
                     return details.isSelected
                 case .tabGroupGridRow(let details, let range):
                     return details.allDetails[range].contains { $0.isSelected }
@@ -99,14 +99,15 @@ class TabCardModel: CardModel {
                 switch self {
                 case .tab(_):
                     return 1
-                case .tabGroupInline(let details, let nextToCells):
+                case .tabGroupInline(let details):
                     return details.allDetails.count
-                case .tabGroupGridRow(let details, _):
-                    return details.allDetails.count
+                case .tabGroupGridRow(_, let range):
+                    return range.count
                 }
             }
         }
         var cells: [Cell]
+        var multipleCellTypes: Bool = false
     }
 
     func buildRows(incognito: Bool, tabGroupModel: TabGroupCardModel, maxCols: Int) -> [Row] {
@@ -122,6 +123,107 @@ class TabCardModel: CardModel {
             }
         }
 
+        var partialResult: [Row] = []
+
+        var allDetailsFiltered = allDetails.filter { tabCard in
+            let tab = tabCard.manager.get(for: tabCard.id)!
+            return
+                (tabGroupModel.representativeTabs.contains(tab)
+                || allDetailsWithExclusionList.contains { $0.id == tabCard.id })
+                && tab.isIncognito == incognito
+        }
+
+        var processed = Array(repeating: false, count: allDetailsFiltered.count)
+
+        func PromoteCellsAfterIndex(_ row: inout Row, _ index: Int) {
+            var didPromote = false
+            var id = index
+
+            while id < allDetailsFiltered.count && row.numTabsInRow < maxCols {
+                let details = allDetailsFiltered[id]
+                if let tabGroup = tabGroupModel.allDetails.first(where: { $0.id == details.rootID })
+                {
+                    // Expanded tab group won't get promoted
+                    if !tabGroup.isExpanded
+                        && (tabGroup.allDetails.count + row.numTabsInRow)
+                            <= maxCols
+                    {
+                        row.cells.append(.tabGroupInline(tabGroup))
+                        didPromote = true
+                        processed[id] = true
+                    }
+                } else {
+                    row.cells.append(.tab(details))
+                    didPromote = true
+                    processed[id] = true
+                }
+
+                id = id + 1
+            }
+
+            if didPromote {
+                row.multipleCellTypes = true
+            }
+        }
+
+        for (index, details) in allDetailsFiltered.enumerated() {
+            if processed[index] == true { continue }
+            let tabGroup = tabGroupModel.allDetails.first(where: { $0.id == details.rootID })
+            if partialResult.isEmpty || partialResult.last!.numTabsInRow >= maxCols
+                || tabGroup != nil
+            {
+                if let tabGroup = tabGroup {
+                    if tabGroup.isExpanded {
+                        if !partialResult.isEmpty {
+                            PromoteCellsAfterIndex(
+                                &partialResult[partialResult.endIndex - 1], index + 1)
+                        }
+                        // tabGroupGridRow always occupies a row by itself.
+                        for index in stride(from: 0, to: tabGroup.allDetails.count, by: maxCols) {
+                            var max = index + maxCols
+                            if max > tabGroup.allDetails.count {
+                                max = tabGroup.allDetails.count
+                            }
+                            let range = index..<max
+                            partialResult.append(
+                                Row(cells: [Row.Cell.tabGroupGridRow(tabGroup, range)]))
+                        }
+                    } else {
+                        // If there's enough remaining columns, fit the tab group in the same row with individual tabs.
+                        // Otherwise, build a horizontal scroll view in the next row.
+                        if (tabGroup.allDetails.count + (partialResult.last?.numTabsInRow ?? 0))
+                            <= maxCols && !partialResult.isEmpty
+                        {
+                            partialResult[partialResult.endIndex - 1].cells.append(
+                                .tabGroupInline(tabGroup))
+                            partialResult[partialResult.endIndex - 1].multipleCellTypes = true
+                        } else {
+                            //TODO: a while loop to make sure the previous row is fully occupied
+                            if !partialResult.isEmpty {
+                                PromoteCellsAfterIndex(
+                                    &partialResult[partialResult.endIndex - 1], index + 1)
+                            }
+                            partialResult.append(
+                                Row(cells: [Row.Cell.tabGroupInline(tabGroup)]))
+                        }
+                    }
+                } else {
+                    partialResult.append(Row(cells: [.tab(details)]))
+                }
+                // Insert a new row (following expanded tab group) for individual tabs
+                if tabGroup != nil && tabGroup!.isExpanded {
+                    partialResult.append(Row(cells: []))
+                }
+            } else {
+                partialResult[partialResult.endIndex - 1].cells.append(.tab(details))
+            }
+            processed[index] = true
+        }
+
+        return partialResult.filter {
+            !$0.cells.isEmpty
+        }
+        /*
         return allDetails.filter { tabCard in
             let tab = tabCard.manager.get(for: tabCard.id)!
             return
@@ -154,6 +256,7 @@ class TabCardModel: CardModel {
                             partialResult[partialResult.endIndex - 1].cells.append(
                                 .tabGroupInline(tabGroup, true))
                         } else {
+                            //TODO: if there's enough remaning columns, look ahead and see if we can fit in other tab/tab gropu
                             partialResult.append(
                                 Row(cells: [Row.Cell.tabGroupInline(tabGroup, false)]))
                         }
@@ -169,6 +272,7 @@ class TabCardModel: CardModel {
                 partialResult[partialResult.endIndex - 1].cells.append(.tab(details))
             }
         }.filter { !$0.cells.isEmpty }
+         */
     }
 
     func onDataUpdated() {

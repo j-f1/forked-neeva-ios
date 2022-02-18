@@ -29,10 +29,10 @@ struct SingleLevelTabCardsView: View {
             HStack(spacing: CardGridUX.GridSpacing) {
                 ForEach(row.cells) { details in
                     switch details {
-                    case .tabGroupInline(let groupDetails, let nextToCells):
+                    case .tabGroupInline(let groupDetails):
                         CollapsedCardGroupView(
                             groupDetails: groupDetails, containerGeometry: containerGeometry,
-                            nextToCells: nextToCells
+                            nextToCells: row.multipleCellTypes
                         )
                         .padding(.horizontal, -CardGridUX.GridSpacing)
                         .padding(.bottom, CardGridUX.GridSpacing)
