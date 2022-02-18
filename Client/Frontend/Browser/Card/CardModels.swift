@@ -133,8 +133,12 @@ class TabCardModel: CardModel {
                 && tab.isIncognito == incognito
         }
 
+        // An array to keep track of whether a CardDetail has been processed. This allows us to skip
+        // the CardDetail that are pre-processed due to lookahead.
         var processed = Array(repeating: false, count: allDetailsFiltered.count)
 
+        // This functions performs lookahead and checks if there are tab/tab groups that can be inserted
+        // in the current row before a new row gets inserted.
         func PromoteCellsAfterIndex(_ row: inout Row, _ index: Int) {
             var didPromote = false
             var id = index
@@ -161,6 +165,9 @@ class TabCardModel: CardModel {
                 id = id + 1
             }
 
+            // Row.multipleCelltypes is needed for the UI to create spacing between different types of cells.
+            // This value won't be evaluated in the UI if the row contains only individual tabs. So, it's
+            // set to true as long as some tab/tab group is promoted.
             if didPromote {
                 row.multipleCellTypes = true
             }
@@ -174,6 +181,7 @@ class TabCardModel: CardModel {
             {
                 if let tabGroup = tabGroup {
                     if tabGroup.isExpanded {
+                        // Perform lookahead before we insert a new row.
                         if !partialResult.isEmpty {
                             PromoteCellsAfterIndex(
                                 &partialResult[partialResult.endIndex - 1], index + 1)
@@ -198,7 +206,7 @@ class TabCardModel: CardModel {
                                 .tabGroupInline(tabGroup))
                             partialResult[partialResult.endIndex - 1].multipleCellTypes = true
                         } else {
-                            //TODO: a while loop to make sure the previous row is fully occupied
+                            // Perform lookahead before we insert a new row.
                             if !partialResult.isEmpty {
                                 PromoteCellsAfterIndex(
                                     &partialResult[partialResult.endIndex - 1], index + 1)
