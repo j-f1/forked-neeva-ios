@@ -63,8 +63,8 @@ class TabCardModel: CardModel {
         var numTabsInRow: Int {
             cells.reduce(
                 0,
-                { total, cell in
-                    total + cell.numTabs
+                { x, y in
+                    x + y.numTabs
                 })
         }
 
@@ -174,7 +174,7 @@ class TabCardModel: CardModel {
         }
 
         for (index, details) in allDetailsFiltered.enumerated() {
-            if processed[index] { continue }
+            if processed[index] == true { continue }
             let tabGroup = tabGroupModel.allDetails.first(where: { $0.id == details.rootID })
             if partialResult.isEmpty || partialResult.last!.numTabsInRow >= maxCols
                 || tabGroup != nil
@@ -224,8 +224,8 @@ class TabCardModel: CardModel {
                 }
             } else {
                 partialResult[partialResult.endIndex - 1].cells.append(.tab(details))
-                partialResult[partialResult.endIndex - 1].multipleCellTypes = true
             }
+            processed[index] = true
         }
 
         return partialResult.filter {
