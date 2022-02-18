@@ -53,6 +53,12 @@ class UserActivityHandler {
         userActivity.contentAttributeSet = attributes
         userActivity.needsSave = true
 
+        DispatchQueue.global(qos: .utility).async {
+            let imageData = FaviconResolver(site: Site(url: url, title: "")).fallbackContent.image.pngData()
+            userActivity.contentAttributeSet?.thumbnailData = imageData
+            userActivity.needsSave = true
+        }
+
         // Set activity as active and makes it available for indexing (if isEligibleForSearch)
         userActivity.becomeCurrent()
 
