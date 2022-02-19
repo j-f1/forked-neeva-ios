@@ -144,6 +144,10 @@ public class TabCardDetails: CardDetails, AccessingManagerProvider,
         tab?.isPinned ?? false
     }
 
+    var pinnedTime: Double? {
+        tab?.pinnedTime
+    }
+
     var url: URL? {
         tab?.url ?? tab?.sessionData?.currentUrl
     }
@@ -260,6 +264,19 @@ public class TabCardDetails: CardDetails, AccessingManagerProvider,
                     }
                 )
             }
+
+            Button(
+                action: { [self] in
+                    manager.get(for: id)?.pinnedTime =
+                        (isPinned ? nil : Date().timeIntervalSinceReferenceDate)
+                    manager.get(for: id)?.isPinned.toggle()
+                },
+                label: {
+                    isPinned
+                        ? Label("Unpin tab", systemSymbol: .pinSlash)
+                        : Label("Pin tab", systemSymbol: .pin)
+                }
+            )
 
             Divider()
 
@@ -568,6 +585,22 @@ class TabGroupCardDetails: CardDetails, AccessingManagerProvider, ClosingManager
         manager.tabManager.selectedTab?.rootUUID == id
     }
 
+    var isPinned: Bool {
+        return allDetails.contains {
+            $0.isPinned
+        }
+    }
+
+    var pinnedTime: Double? {
+        let pinnedTimeList = allDetails.filter {
+            $0.isPinned
+        }.map {
+            $0.pinnedTime ?? 0
+        }
+
+        return pinnedTimeList.min()
+    }
+
     var customTitle: String? {
         get {
             Defaults[.tabGroupNames][id] ?? manager.get(for: id)?.inferredTitle
@@ -607,6 +640,17 @@ class TabGroupCardDetails: CardDetails, AccessingManagerProvider, ClosingManager
 
         allDetails =
             manager.get(for: id)?.children
+            .sorted(by: { lhs, rhs in
+                if lhs.isPinned && rhs.isPinned {
+                    return lhs.pinnedTime! < rhs.pinnedTime!
+                } else if lhs.isPinned && !rhs.isPinned {
+                    return true
+                } else if !lhs.isPinned && rhs.isPinned {
+                    return false
+                } else {
+                    return false
+                }
+            })
             .map({
                 TabCardDetails(
                     tab: $0,

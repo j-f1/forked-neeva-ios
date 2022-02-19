@@ -28,6 +28,7 @@ class TabCardModel: CardModel {
     var manager: TabManager
     private var groupManager: TabGroupManager
     private var subscription: AnyCancellable? = nil
+    private var isPinnedSubscription: Set<AnyCancellable> = Set()
 
     @Published var allDetails: [TabCardDetails] = []
     @Published private(set) var allDetailsWithExclusionList: [TabCardDetails] = []
@@ -104,13 +105,20 @@ class TabCardModel: CardModel {
             }
         }
 
-        var rowList = allDetails.filter { tabCard in
+        var allDetailsFiltered = allDetails.filter { tabCard in
             let tab = tabCard.manager.get(for: tabCard.id)!
+            let representativeTabs = groupManager.getAll()
+                .reduce(into: [Tab]()) { $0.append($1.children.first!) }
             return
-                (tabGroupModel.representativeTabs.contains(tab)
+                (representativeTabs.contains(tab)
                 || allDetailsWithExclusionList.contains { $0.id == tabCard.id })
-                && tab.isIncognito == incognito
-        }.reduce(into: []) { partialResult, details in
+                && !tab.isIncognito
+            // TODO: figure out how to deal with incognito tabs
+        }
+
+        modifyAllDetailsFilteredPromotingPinnedTabs(&allDetailsFiltered, tabGroupModel)
+
+        var rowList = allDetailsFiltered.reduce(into: []) { partialResult, details in
             let tabGroup = tabGroupModel.allDetails.first(where: { $0.id == details.rootID })
             if partialResult.isEmpty || partialResult.last?.cells.count == maxCols
                 || tabGroup != nil
@@ -146,17 +154,46 @@ class TabCardModel: CardModel {
 
     func onDataUpdated() {
         groupManager.updateTabGroups()
+
         allDetails = manager.getAll()
             .map { TabCardDetails(tab: $0, manager: manager) }
-
-        modifyAllDetailsAvoidingSingleTabs(groupManager.childTabs)
 
         allDetailsWithExclusionList = manager.getAll().filter {
             !groupManager.childTabs.contains($0)
         }
         .map { TabCardDetails(tab: $0, manager: manager) }
+
+        //        modifyAllDetailsAvoidingSingleTabs(groupManager.childTabs)
+
         selectedTabID = manager.selectedTab?.tabUUID ?? ""
         onViewUpdate()
+    }
+
+    private func modifyAllDetailsFilteredPromotingPinnedTabs(
+        _ allDetailsFiltered: inout [TabCardDetails], _ tabGroupModel: TabGroupCardModel
+    ) {
+        allDetailsFiltered = allDetailsFiltered.sorted(by: { lhs, rhs in
+            let lhsPinnedTime = findDetailPinnedTime(lhs, tabGroupModel)
+            let rhsPinnedTime = findDetailPinnedTime(rhs, tabGroupModel)
+            if lhsPinnedTime == nil && rhsPinnedTime != nil {
+                return false
+            } else if lhsPinnedTime != nil && rhsPinnedTime == nil {
+                return true
+            } else if lhsPinnedTime != nil && rhsPinnedTime != nil {
+                return lhsPinnedTime! < rhsPinnedTime!
+            }
+            return false
+        })
+    }
+
+    private func findDetailPinnedTime(_ detail: TabCardDetails, _ tabGroupModel: TabGroupCardModel)
+        -> Double?
+    {
+        if let tabGroup = tabGroupModel.allDetails.first(where: { $0.id == detail.rootID }) {
+            return tabGroup.pinnedTime
+        } else {
+            return detail.pinnedTime
+        }
     }
 
     private func modifyAllDetailsAvoidingSingleTabs(_ childTabs: [Tab]) {
