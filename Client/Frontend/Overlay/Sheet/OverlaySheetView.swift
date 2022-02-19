@@ -232,7 +232,7 @@ struct OverlaySheetView<Content: View, HeaderContent: View>: View, KeyboardReada
                     }
                 }
             }
-            .padding(.bottom, applyBottomSafeAreaToSheet ? 0 : bottomSafeArea)
+            .padding(.bottom, applyBottomSafeAreaToSheet ? bottomSafeArea : 0)
             .onHeightOfViewChanged { height in
                 self.contentHeight = height
             }
@@ -323,10 +323,14 @@ struct OverlaySheetView<Content: View, HeaderContent: View>: View, KeyboardReada
 
             )
         }
+        .background(
+            Color.clear
+                .ignoresSafeArea(.keyboard)
+                .safeAreaChanged { insets in
+                    self.bottomSafeArea = insets.bottom
+                }
+        )
         .ignoresSafeArea(.container)
-        .safeAreaChanged { insets in
-            self.bottomSafeArea = insets.bottom
-        }
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
         .accessibilityAction(.escape, onDismiss)
