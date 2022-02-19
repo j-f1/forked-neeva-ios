@@ -870,6 +870,8 @@ class BrowserViewController: UIViewController, ModalPresenter {
             if self.shouldPresentDBPrompt {
                 self.presentDBPromptView()
             }
+
+            self.overlayManager.hideCurrentOverlay()
             self.hideCardGrid(withAnimation: false)
         }
     }
