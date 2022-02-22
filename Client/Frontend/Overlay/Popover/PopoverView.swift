@@ -8,6 +8,9 @@ import SwiftUI
 struct PopoverView<Content: View>: View {
     @State private var title: LocalizedStringKey? = nil
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
     let style: OverlayStyle
     let onDismiss: () -> Void
     let headerButton: OverlayHeaderButton?
@@ -48,8 +51,6 @@ struct PopoverView<Content: View>: View {
                                 }
                             )
                             .buttonStyle(.neeva(.primary))
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 6)
                             .layoutPriority(0.5)
                         }
                     }
@@ -78,7 +79,6 @@ struct PopoverView<Content: View>: View {
                                 .onPreferenceChange(OverlayTitlePreferenceKey.self) {
                                     self.title = $0
                                 }
-                                .padding(.bottom, 18)
                         }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -86,10 +86,31 @@ struct PopoverView<Content: View>: View {
                         Color(style.backgroundColor)
                             .cornerRadius(16)
                     )
-                    .padding()
-                }.frame(width: geo.size.width / 1.5)
+                    // 50 is button height + VStack padding
+                    .frame(maxHeight: geo.size.height - paddingForSizeClass(verticalSizeClass) - 60)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, paddingForSizeClass(horizontalSizeClass))
+                .padding(.vertical, paddingForSizeClass(verticalSizeClass))
             }
             .accessibilityAction(.escape, onDismiss)
+        }
+    }
+
+    func paddingForSizeClass(_ sizeClass: UserInterfaceSizeClass?) -> CGFloat {
+        let defaultValue: CGFloat = 12
+
+        guard let sizeClass = sizeClass else {
+            return defaultValue
+        }
+
+        switch sizeClass {
+        case .compact:
+            return defaultValue
+        case .regular:
+            return 50
+        @unknown default:
+            return defaultValue
         }
     }
 }
